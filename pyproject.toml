@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homekit-bridge"
-version = "0.1.4"
+version = "0.1.5"
 description = "HomeKit bridge for light-programmer — exposes Auto Mode and All-Off switches to Apple Home"
 readme = "README.md"
 license = {text = "MIT"}
