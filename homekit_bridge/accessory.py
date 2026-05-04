@@ -1,10 +1,15 @@
-"""HomeKit accessory definitions."""
+"""HomeKit accessory definitions.
+
+Each switch uses both `setter_callback` (when iPhone toggles) and
+`getter_callback` (when iPhone polls). Reading on demand keeps Apple Home in
+sync with mode changes that originate outside the bridge (MCP/CLI) without
+needing a background thread that races with HAP's event loop.
+"""
 import logging
 
-from pyhap.accessory import Bridge
+from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_SWITCH
-from pyhap.accessory import Accessory
 
 from .programmer_client import ProgrammerClient
 
@@ -20,7 +25,10 @@ class _ModeSwitch(Accessory):
 
         serv = self.add_preload_service("Switch")
         self.char_on = serv.configure_char(
-            "On", setter_callback=self._set_on, value=False,
+            "On",
+            setter_callback=self._set_on,
+            getter_callback=self._get_on,
+            value=False,
         )
 
     def _set_on(self, value: bool):
@@ -32,9 +40,11 @@ class _ModeSwitch(Accessory):
         except Exception as e:
             logging.error(f"[{self.display_name}] failed to push state: {e}")
 
-    def push(self, value: bool):
-        """Update HomeKit-visible state without invoking the setter."""
-        self.char_on.set_value(bool(value), should_notify=True)
+    def _get_on(self) -> bool:
+        state = self.client.get_mode()
+        if not state:
+            return bool(self.char_on.value)
+        return bool(state.get(self.field, False))
 
 
 def build_bridge(driver: AccessoryDriver, name: str,
