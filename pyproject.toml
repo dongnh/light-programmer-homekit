@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "homekit-bridge"
+version = "0.1.0"
+description = "HomeKit bridge for light-programmer — exposes Auto Mode and All-Off switches to Apple Home"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Nguyen Ha Dong"}]
+dependencies = [
+    "HAP-python>=4.9.2",
+]
+
+[project.scripts]
+homekit-bridge = "homekit_bridge.main:main"
+
+[tool.setuptools.packages.find]
+include = ["homekit_bridge*"]
