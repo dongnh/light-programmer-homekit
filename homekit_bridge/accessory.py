@@ -24,11 +24,17 @@ class _ModeSwitch(Accessory):
         self.field = field  # 'auto' or 'kill'
 
         serv = self.add_preload_service("Switch")
+        # Seed initial value from the programmer once at startup; after that we
+        # rely on setter_callback to keep state in sync. A getter_callback would
+        # block HAP-python's event loop on every poll and trip Apple Home's
+        # "No Response" timeout.
+        try:
+            initial = bool(client.get_mode().get(field, False))
+        except Exception as e:
+            logging.warning(f"[{display_name}] initial state read failed: {e}")
+            initial = False
         self.char_on = serv.configure_char(
-            "On",
-            setter_callback=self._set_on,
-            getter_callback=self._get_on,
-            value=False,
+            "On", setter_callback=self._set_on, value=initial,
         )
 
     def _set_on(self, value: bool):
@@ -39,12 +45,6 @@ class _ModeSwitch(Accessory):
                 self.client.set_kill(value)
         except Exception as e:
             logging.error(f"[{self.display_name}] failed to push state: {e}")
-
-    def _get_on(self) -> bool:
-        state = self.client.get_mode()
-        if not state:
-            return bool(self.char_on.value)
-        return bool(state.get(self.field, False))
 
 
 def build_bridge(driver: AccessoryDriver, name: str,
