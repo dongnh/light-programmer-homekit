@@ -60,8 +60,8 @@ def build_bridge(driver: AccessoryDriver, name: str,
                  client: ProgrammerClient) -> tuple[Bridge, _ModeSwitch, _ModeSwitch]:
     bridge = Bridge(driver, name)
     _set_info(bridge, serial="lp-bridge", model=MODEL)
-    auto_sw = _ModeSwitch(driver, "LP Auto", client, "auto")
-    kill_sw = _ModeSwitch(driver, "LP Kill", client, "kill")
+    auto_sw = _ModeSwitch(driver, "Circadian", client, "auto")
+    kill_sw = _ModeSwitch(driver, "Blackout", client, "kill")
     bridge.add_accessory(auto_sw)
     bridge.add_accessory(kill_sw)
     return bridge, auto_sw, kill_sw
