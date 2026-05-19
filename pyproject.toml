@@ -3,8 +3,8 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "homekit-bridge"
-version = "0.1.6"
+name = "light-programmer-homekit"
+version = "0.2.0"
 description = "HomeKit bridge for light-programmer — exposes Auto Mode and All-Off switches to Apple Home"
 readme = "README.md"
 license = {text = "MIT"}
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-homekit-bridge = "homekit_bridge.main:main"
+light-programmer-homekit = "light_programmer_homekit.main:main"
 
 [tool.setuptools.packages.find]
-include = ["homekit_bridge*"]
+include = ["light_programmer_homekit*"]

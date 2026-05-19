@@ -1,4 +1,4 @@
-# homekit-bridge
+# light-programmer-homekit
 
 HomeKit bridge for [light-programmer](https://github.com/dongnh/light_programmer).
 Exposes a small set of switches to Apple Home so the home automation policy
@@ -12,7 +12,7 @@ can be controlled from anywhere via Siri / Home app / iCloud:
 
 ```
  Apple Home  ─┐
- Siri        ─┼──► homekit-bridge ──HTTP──► light-programmer ──► matter_webcontrol ──► devices
+ Siri        ─┼──► light-programmer-homekit ──HTTP──► light-programmer ──► matter_webcontrol ──► devices
  Automation  ─┘   (HAP accessory)         (/mode, /kill)
 ```
 
@@ -29,7 +29,7 @@ pip install -e .
 ## Run
 
 ```bash
-homekit-bridge --config examples/config.json
+light-programmer-homekit --config examples/config.json
 ```
 
 On first start, the bridge prints a HomeKit setup code. Pair via the Home app
