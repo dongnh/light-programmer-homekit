@@ -1,72 +1,52 @@
 # Light Programmer for HomeKit
 
-Control [light-programmer](https://github.com/dongnh/light_programmer) from the Home app. Two switches appear in Apple Home — that is the interface. Siri, automations, and shared family access come along for free.
+Control [light-programmer](https://github.com/dongnh/light_programmer) from the Home app.
 
-## Apple Home is the interface
+## Overview
 
-Light Programmer runs quietly in the background. The Home app is where you actually touch it.
+Two switches in Apple Home. That is the entire interface.
 
-- **LP Auto.** Turn the schedule on or off. When off, lights stay where they are; when on, the daemon resumes following your circadian schedule on the next tick.
-- **LP Kill.** All off. Every configured light goes dark and stays dark until you flip LP Auto back on.
+LP Auto turns the schedule on or off. When off, lights stay where they are. When on, the daemon resumes following your circadian schedule on the next tick.
 
-Both switches respond to Siri ("Turn off LP Auto"), to scheduled Home automations ("At sunset, turn on LP Auto"), and to anyone you've shared the home with. You never need to SSH into the server, edit a file, or call an API to change how the house behaves tonight.
+LP Kill takes everything dark. Every configured light goes off and stays off until LP Auto comes back on.
 
-## How it fits together
+Both switches respond to Siri, to scheduled Home automations, and to anyone you have shared the home with. No SSH. No config files. No API calls. The house behaves the way you ask, from the room you are in.
 
-```
-Home app, Siri,  ─►  light-programmer-homekit  ─HTTP─►  light-programmer  ─►  matter_webcontrol  ─►  lights
-Home automations     (HAP accessory bridge)            (/mode, /kill)
-```
+## How it works
 
-The bridge is intentionally thin. It holds no state. Every flip of a switch is a single HTTP call to the daemon, and the daemon owns the truth. If the bridge crashes or you restart it, your lights keep running on whatever the last decision was. Pairing survives across restarts because the bridge's HomeKit identity is derived from the bridge name, not from the pairing file.
+The bridge is intentionally thin. It holds no state. Every switch flip is a single HTTP call to light-programmer, and the daemon owns the truth. If the bridge crashes or restarts, your lights keep running on the last decision made.
+
+Pairing survives restarts. The HomeKit identity is derived from the bridge name, not from the pairing file, so the accessory stays the same accessory across reinstalls.
+
+A short poll keeps the Home app in sync when something else flips the mode flags — another bridge, a script, or the daemon itself on boot.
 
 ## Requirements
 
-- macOS or Linux host on the same LAN as your Apple Home Hub (HomePod, Apple TV, or iPad).
-- Python 3.10 or later.
-- A reachable [light-programmer](https://github.com/dongnh/light_programmer) ≥ 0.6.0 with `--mode-state` enabled.
+macOS or Linux on the same LAN as an Apple Home Hub. Python 3.10 or later. A reachable light-programmer 0.6.0 or newer, launched with mode state enabled.
 
-## Install
+## Installation
 
-```bash
-pip install -e .
-```
+Install the package into a virtual environment, then run the bridge with a config file pointing at your light-programmer instance.
 
-## Run
-
-```bash
-light-programmer-homekit --config examples/config.json
-```
-
-On first launch, the bridge prints a HomeKit setup code. In the Home app, tap **Add Accessory → More options…**, choose **Light Programmer**, and enter the code. The two switches show up in your default room; move them wherever feels right.
+On first launch the bridge prints a HomeKit setup code. In the Home app, choose Add Accessory, then More options, then Light Programmer, and enter the code. The two switches appear in your default room.
 
 ## Configuration
 
-See [`examples/config.json`](examples/config.json).
+A small JSON file. The defaults are sensible; the fields you might touch are the programmer URL, the bridge name shown in Apple Home, the HAP port, and the poll interval.
 
-| Field | Default | Purpose |
-|---|---|---|
-| `programmer_url` | `http://127.0.0.1:7860` | Where light-programmer's mode API is reachable. |
-| `bridge_name` | `Light Programmer` | The name Apple Home shows. Also seeds the stable HomeKit MAC. |
-| `port` | `51826` | HAP port. Must be reachable from your Home Hub. |
-| `state_path` | `./accessory.state` | Where HomeKit pairing keys live. Back this up if you care about avoiding a re-pair. |
-| `poll_interval` | `5` | How often (seconds) the bridge re-reads light-programmer's mode flags, so the Home app stays in sync when something else flips them. |
+The bridge name seeds the stable HomeKit MAC. Changing it forces a fresh pairing. Pick a name you will keep.
 
-Changing `bridge_name` changes the HomeKit MAC and forces a fresh pairing. Pick a name you'll keep.
-
-## Programmer contract
-
-The bridge talks to three endpoints on light-programmer:
-
-- `GET /mode` → `{"auto": bool, "kill": bool}`
-- `POST /mode` body `{"auto": bool}` → `{"auto": bool}`
-- `POST /kill` body `{"kill": bool}` → `{"kill": bool}`
-
-Available in light-programmer 0.6.0 and later. Pass `--mode-state /path/to/mode.json` when launching light-programmer to turn them on.
+A sample config lives in the examples directory.
 
 ## Status
 
 Pre-alpha. Schema and endpoints may change before 1.0.
+
+## Related projects
+
+[light-programmer](https://github.com/dongnh/light_programmer) — the schedule brain this bridge controls.
+
+[matter_webcontrol](https://github.com/dongnh/matter_webcontrol) — the Matter controller light-programmer drives.
 
 ## License
 
