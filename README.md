@@ -6,6 +6,8 @@ See your [light-programmer](https://github.com/dongnh/light_programmer) lights' 
 
 One Contact Sensor per light, plus one for the whole system — the entire interface. Each light appears under the name you gave it; **Open** means the system can reach it, **Closed** means it dropped off (inverted on purpose, so Apple's "<name> Opened/Closed" reads naturally). A **"Light Programmer"** system sensor reports the daemon itself. Turn on notifications to hear the moment a light — or the daemon — goes quiet.
 
+<img width="775" height="734" alt="image" src="https://github.com/user-attachments/assets/30ab8cdf-060e-4060-8222-6d05e81dacf6" />
+
 ## How it works
 
 The bridge holds no state. Every poll is one HTTP call to light-programmer's `/lights`, mirrored onto the sensors. Each light's HomeKit id is derived from the light id, so notifications and automations stay bound to the right light across restarts. The accessory set is fixed at pairing time — add a light to light-programmer and restart the bridge to surface its sensor.
