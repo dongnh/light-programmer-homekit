@@ -36,6 +36,8 @@ A small JSON file. The fields you might touch are the programmer URL, the bridge
 
 If light-programmer's mode HTTP server requires an `X-API-Key` (it should, when bound to the LAN), set `programmer_api_key` to the same secret; leave it empty for an unauthenticated loopback programmer. A wrong or missing key while the programmer requires one makes `/lights` return 401, so the bridge reports the system as down rather than crashing.
 
+Set `pincode` ("DDD-DD-DDD") to a fixed HomeKit setup code. Without it, the bridge generates a new random code on every restart (the code is not persisted), so the code you paired with becomes stale the next time the service restarts — confusing if you ever need to re-add the bridge. Pinning it keeps the code stable. It does not affect existing pairings (the code is only used for the initial pair).
+
 The light names themselves come from light-programmer's config, not here. The bridge name seeds the stable HomeKit MAC; changing it forces a fresh pairing. Pick a name you will keep.
 
 A sample config lives in the examples directory.

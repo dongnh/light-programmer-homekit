@@ -68,11 +68,21 @@ def main():
 
     mac = cfg.get("mac") or _stable_mac(f"homekit-bridge:{bridge_name}")
     logging.info(f"Using stable MAC {mac} for bridge '{bridge_name}'")
+    # HAP-python regenerates a RANDOM setup code on every startup unless one is
+    # provided (it is not persisted in accessory.state). For a long-running
+    # service that may restart (KeepAlive, reboot), that means the pairing code
+    # silently changes — confusing if you ever need to re-add the bridge. Pin it
+    # via config `pincode` ("DDD-DD-DDD") so the code is stable across restarts.
+    pincode = cfg.get("pincode")
+    pincode_bytes = pincode.encode() if pincode else None
+    if pincode:
+        logging.info("Using fixed HomeKit setup code from config")
     driver = AccessoryDriver(
         port=cfg.get("port", 51826),
         persist_file=cfg.get("state_path", "./accessory.state"),
         address=cfg.get("address"),
         mac=mac,
+        pincode=pincode_bytes,
     )
     bridge = build_bridge(driver, bridge_name, client, lights,
                           reachable=reachable, prefix=prefix, interval=interval,
