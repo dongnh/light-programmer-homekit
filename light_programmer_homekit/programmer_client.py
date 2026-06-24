@@ -8,16 +8,20 @@ import urllib.request
 
 
 class ProgrammerClient:
-    def __init__(self, base_url: str, timeout: float = 5.0):
+    def __init__(self, base_url: str, timeout: float = 5.0,
+                 api_key: str | None = None):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.api_key = api_key
 
     def _request(self, method: str, path: str, payload: dict | None = None) -> dict:
         url = f"{self.base_url}{path}"
         data = json.dumps(payload).encode() if payload is not None else None
+        headers = {"Content-Type": "application/json"} if data else {}
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
         req = urllib.request.Request(
-            url, data=data, method=method,
-            headers={"Content-Type": "application/json"} if data else {},
+            url, data=data, method=method, headers=headers,
         )
         with urllib.request.urlopen(req, timeout=self.timeout) as resp:
             body = resp.read().decode()

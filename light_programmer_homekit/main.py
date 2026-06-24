@@ -39,7 +39,8 @@ def main():
     with open(args.config) as f:
         cfg = json.load(f)
 
-    client = ProgrammerClient(cfg["programmer_url"])
+    client = ProgrammerClient(cfg["programmer_url"],
+                              api_key=cfg.get("programmer_api_key"))
     bridge_name = cfg.get("bridge_name", "Light Programmer")
     prefix = cfg.get("notify_prefix", DEFAULT_PREFIX)
     interval = cfg.get("poll_interval", DEFAULT_POLL_INTERVAL)

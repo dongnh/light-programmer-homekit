@@ -34,6 +34,8 @@ On first launch the bridge prints a HomeKit setup code. In the Home app, choose 
 
 A small JSON file. The fields you might touch are the programmer URL, the bridge name shown in Apple Home, the HAP port, the poll interval, `notify_prefix` — the text prepended to each light's name (default "Communication to ") — and `fail_threshold`, the number of consecutive failed `/lights` polls before the system sensor is declared down (default 3). The threshold debounces a single transient timeout so a brief light-programmer blip does not fire a false notification; recovery is immediate on the first good poll.
 
+If light-programmer's mode HTTP server requires an `X-API-Key` (it should, when bound to the LAN), set `programmer_api_key` to the same secret; leave it empty for an unauthenticated loopback programmer. A wrong or missing key while the programmer requires one makes `/lights` return 401, so the bridge reports the system as down rather than crashing.
+
 The light names themselves come from light-programmer's config, not here. The bridge name seeds the stable HomeKit MAC; changing it forces a fresh pairing. Pick a name you will keep.
 
 A sample config lives in the examples directory.

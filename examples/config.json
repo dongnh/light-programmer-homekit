@@ -1,5 +1,6 @@
 {
   "programmer_url": "http://127.0.0.1:7870",
+  "programmer_api_key": "",
   "bridge_name": "Light Programmer",
   "port": 51826,
   "state_path": "./accessory.state",
