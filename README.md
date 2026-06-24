@@ -2,55 +2,35 @@
 
 See your [light-programmer](https://github.com/dongnh/light_programmer) lights' health from the Home app.
 
-## Overview
+## What it is
 
-One sensor per light, plus one for the whole system. That is the entire interface.
-
-Every light light-programmer manages appears in Apple Home as a sensor named "Communication to <light>". While the system can reach the light, the sensor reads open; when the light drops off — loses power, falls off the mesh — it reads closed. Turn on notifications for it in the Home app and you hear about it the moment it happens.
-
-A system sensor named "Light Programmer" reports the daemon itself: open while it answers, closed when it stops. That one is the bridge's own check, so you are told even when the daemon is the thing that died.
-
-The sensors respond to Home automations and to anyone you have shared the home with. No SSH, no log tailing — the house tells you when a light goes quiet.
+One Contact Sensor per light, plus one for the whole system — the entire interface. Each light appears under the name you gave it; **Open** means the system can reach it, **Closed** means it dropped off (inverted on purpose, so Apple's "<name> Opened/Closed" reads naturally). A **"Light Programmer"** system sensor reports the daemon itself. Turn on notifications to hear the moment a light — or the daemon — goes quiet.
 
 ## How it works
 
-The bridge is intentionally thin. It holds no state of its own. Every poll is one HTTP call to light-programmer's `/lights`, which lists each light by the name you gave it and whether the system can currently reach it; the bridge mirrors that onto the sensors. light-programmer reads that reachability from matter_webcontrol, so a light that goes offline surfaces here within a poll.
-
-The polarity is deliberate. A reachable light reads as open, a lost one as closed, so Apple's fixed wording — "<name> Opened" or "<name> Closed" — reads as plain English about the connection.
-
-Pairing survives restarts. The HomeKit identity is derived from the bridge name, not the pairing file, so the accessory stays the same across reinstalls. Apple Home fixes the accessory set at pairing time, so the bridge learns the light list once at startup — add a light to light-programmer and restart the bridge to surface its sensor.
+The bridge holds no state. Every poll is one HTTP call to light-programmer's `/lights`, mirrored onto the sensors. Each light's HomeKit id is derived from the light id, so notifications and automations stay bound to the right light across restarts. The accessory set is fixed at pairing time — add a light to light-programmer and restart the bridge to surface its sensor.
 
 ## Requirements
 
-macOS or Linux on the same LAN as an Apple Home Hub. Python 3.10 or later. A reachable light-programmer 0.15.0 or newer (the release that serves `/lights`), launched with mode state enabled.
+macOS or Linux on the same LAN as an Apple Home hub, Python 3.10+, and a reachable light-programmer 0.15+ (the release that serves `/lights`).
 
-## Installation
+## Install & pair
 
-Install the package into a virtual environment, then run the bridge with a config file pointing at your light-programmer instance.
+Install into a virtualenv and run with a config file pointing at your light-programmer. On first launch the bridge prints a HomeKit setup code; in the Home app choose Add Accessory and enter it. Set a fixed `pincode` so that code stays stable across restarts.
 
-On first launch the bridge prints a HomeKit setup code. In the Home app, choose Add Accessory, then More options, then Light Programmer, and enter the code. The sensors appear in your default room. Open any one and turn on its notifications to be alerted when that light — or the whole system — drops off.
+## Configure
 
-## Configuration
+A small JSON file — see [`examples/config.json`](examples/config.json). Fields you might set:
 
-A small JSON file. The fields you might touch are the programmer URL, the bridge name shown in Apple Home, the HAP port, the poll interval, `notify_prefix` — the text prepended to each light's name (default "Communication to ") — and `fail_threshold`, the number of consecutive failed `/lights` polls before the system sensor is declared down (default 3). The threshold debounces a single transient timeout so a brief light-programmer blip does not fire a false notification; recovery is immediate on the first good poll.
+- `programmer_url` — light-programmer's mode HTTP endpoint.
+- `programmer_api_key` — match light-programmer's `X-API-Key` if it requires one; empty for a loopback programmer.
+- `bridge_name` — the name in Apple Home; it also seeds the stable MAC, so pick one you'll keep.
+- `pincode` — fixed setup code (`DDD-DD-DDD`). Without it the bridge generates a new code on every restart.
+- `poll_interval` — seconds between `/lights` polls.
+- `fail_threshold` — consecutive failed polls before the system sensor flips to Closed (debounces a transient blip).
+- `notify_prefix` — text prepended to each light's name (default `"Communication to "`; set empty for bare names).
 
-If light-programmer's mode HTTP server requires an `X-API-Key` (it should, when bound to the LAN), set `programmer_api_key` to the same secret; leave it empty for an unauthenticated loopback programmer. A wrong or missing key while the programmer requires one makes `/lights` return 401, so the bridge reports the system as down rather than crashing.
-
-Set `pincode` ("DDD-DD-DDD") to a fixed HomeKit setup code. Without it, the bridge generates a new random code on every restart (the code is not persisted), so the code you paired with becomes stale the next time the service restarts — confusing if you ever need to re-add the bridge. Pinning it keeps the code stable. It does not affect existing pairings (the code is only used for the initial pair).
-
-The light names themselves come from light-programmer's config, not here. The bridge name seeds the stable HomeKit MAC; changing it forces a fresh pairing. Pick a name you will keep.
-
-A sample config lives in the examples directory.
-
-## Status
-
-Pre-alpha. Schema and endpoints may change before 1.0.
-
-## Related projects
-
-[light-programmer](https://github.com/dongnh/light_programmer) — the schedule brain this bridge watches.
-
-[matter_webcontrol](https://github.com/dongnh/matter_webcontrol) — the Matter controller that reports each device's online/offline state.
+The light names themselves come from light-programmer's config, not here.
 
 ## License
 
