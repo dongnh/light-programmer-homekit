@@ -4,10 +4,13 @@ import hashlib
 import json
 import logging
 import signal
+import time
 
 from pyhap.accessory_driver import AccessoryDriver
 
-from .accessory import build_bridge
+from .accessory import (
+    build_bridge, DEFAULT_PREFIX, DEFAULT_POLL_INTERVAL, DEFAULT_FAIL_THRESHOLD,
+)
 from .programmer_client import ProgrammerClient
 
 
@@ -38,6 +41,30 @@ def main():
 
     client = ProgrammerClient(cfg["programmer_url"])
     bridge_name = cfg.get("bridge_name", "Light Programmer")
+    prefix = cfg.get("notify_prefix", DEFAULT_PREFIX)
+    interval = cfg.get("poll_interval", DEFAULT_POLL_INTERVAL)
+    fail_threshold = cfg.get("fail_threshold", DEFAULT_FAIL_THRESHOLD)
+
+    # HomeKit accessories are fixed at pairing time, so the light set must be
+    # known before driver.start(). Retry while light-programmer boots — both run
+    # as launchd services and may come up together.
+    lights = None
+    for attempt in range(30):  # ~90s
+        lights = client.get_lights()
+        if lights is not None:
+            break
+        logging.info("Waiting for light-programmer /lights (attempt %d)…", attempt + 1)
+        time.sleep(3)
+    reachable = lights is not None
+    if not reachable:
+        logging.warning(
+            "light-programmer unreachable at startup; exposing only the system "
+            "sensor. Restart this bridge once light-programmer is up to pick up "
+            "the per-light sensors."
+        )
+        lights = []
+    logging.info("Building bridge '%s' with %d light sensor(s)", bridge_name, len(lights))
+
     mac = cfg.get("mac") or _stable_mac(f"homekit-bridge:{bridge_name}")
     logging.info(f"Using stable MAC {mac} for bridge '{bridge_name}'")
     driver = AccessoryDriver(
@@ -46,7 +73,9 @@ def main():
         address=cfg.get("address"),
         mac=mac,
     )
-    bridge, _, _ = build_bridge(driver, bridge_name, client)
+    bridge = build_bridge(driver, bridge_name, client, lights,
+                          reachable=reachable, prefix=prefix, interval=interval,
+                          fail_threshold=fail_threshold)
     driver.add_accessory(accessory=bridge)
 
     signal.signal(signal.SIGTERM, lambda *_: driver.stop())

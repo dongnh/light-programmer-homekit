@@ -1,7 +1,9 @@
 {
-  "programmer_url": "http://127.0.0.1:7860",
+  "programmer_url": "http://127.0.0.1:7870",
   "bridge_name": "Light Programmer",
   "port": 51826,
   "state_path": "./accessory.state",
-  "poll_interval": 5
+  "notify_prefix": "Communication to ",
+  "poll_interval": 30,
+  "fail_threshold": 3
 }

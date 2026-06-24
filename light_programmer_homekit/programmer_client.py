@@ -1,4 +1,6 @@
-"""Thin HTTP client for light-programmer's /mode and /kill endpoints."""
+"""Thin HTTP client for light-programmer's /lights endpoint."""
+from __future__ import annotations
+
 import json
 import logging
 import urllib.error
@@ -21,16 +23,18 @@ class ProgrammerClient:
             body = resp.read().decode()
         return json.loads(body) if body else {}
 
-    def get_mode(self) -> dict:
-        """Returns {'auto': bool, 'kill': bool}."""
+    def get_lights(self):
+        """Per-light status list ``[{id, name, connected}, …]`` from /lights.
+
+        Returns ``None`` when light-programmer is unreachable, so the caller can
+        flip the system sensor to "disconnected" and freeze the per-light ones
+        rather than reporting stale state.
+        """
         try:
-            return self._request("GET", "/mode")
-        except (urllib.error.URLError, json.JSONDecodeError) as e:
-            logging.warning(f"get_mode failed: {e}")
-            return {}
-
-    def set_auto(self, auto: bool) -> dict:
-        return self._request("POST", "/mode", {"auto": bool(auto)})
-
-    def set_kill(self, kill: bool) -> dict:
-        return self._request("POST", "/kill", {"kill": bool(kill)})
+            data = self._request("GET", "/lights")
+        except (urllib.error.URLError, json.JSONDecodeError, OSError, TimeoutError) as e:
+            logging.warning(f"get_lights failed: {e}")
+            return None
+        if not isinstance(data, dict):
+            return None
+        return data.get("lights", [])
